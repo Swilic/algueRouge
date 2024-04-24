@@ -2,6 +2,11 @@ import os
 import csv
 import math
 
+class Tree:
+    def __init__(self, root: 'Node' = None):
+        self.__root = None
+
+
 class Node:
     def __init__(self, criterion: str, is_leaf: bool = False):
         self.__attribut = criterion
@@ -54,6 +59,7 @@ def load_dataset(path: str) -> list[Mushroom]:
     with open(os.getcwd() + path) as csvfile:
         reader = csv.reader(csvfile, delimiter=',')
         header = next(reader)
+        mushrooms.append(header)
         for row in reader:
             mushrooms.append(Mushroom(boolean[row[0]]))
             # print(row)
@@ -64,15 +70,36 @@ def load_dataset(path: str) -> list[Mushroom]:
 def calculate_entropy(mushrooms: list[Mushroom]) -> float:
     edible = 0
     for mushroom in mushrooms:
-        if mushroom.is_edible:
+        if mushroom.edible:
             edible += 1
     edible /= len(mushrooms)
 
     if edible == 0 or edible == 1:
         return 0
-    return edible * math.log(edible, 2) * ((1 - edible) / edible) - math.log(1 - edible, 2)
+    return edible * math.log(((1 - edible) / edible), 2) - math.log(1 - edible, 2)
 
+def get_mushrooms_same_attribute(mushrooms: list[Mushroom], attribute: str, value: str) -> list[Mushroom]:
+    mushrooms_with_attribute = []
+    for mushroom in mushrooms:
+        if mushroom.get_attribute(attribute) == value:
+            mushrooms_with_attribute.append(mushroom)
+    return mushrooms_with_attribute
+
+def build_decision_tree(mushrooms: list[Mushroom]) -> Node:
+    header = mushrooms[0]
+    mushrooms = mushrooms[1:]
+    value_used = []
+    
+    for attribute in header:
+        for mushroom in mushrooms:
+            value = mushroom.get_attribute(attribute)
+            if value not in value_used:
+                mushrooms_with_attribute = get_mushrooms_same_attribute(mushrooms, attribute, value)
+                value_used.append(value)
+                print(calculate_entropy(mushrooms_with_attribute))
+            
 
 if __name__ == "__main__":
-    load_dataset('/resources/lowmush.csv')
+    mushrooms = load_dataset('/resources/lowmush.csv')
+    tree = build_decision_tree(mushrooms)
     print('done')
