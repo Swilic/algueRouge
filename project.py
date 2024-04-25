@@ -67,7 +67,6 @@ def load_dataset(path: str) -> list[Mushroom]:
                 mushrooms[-1].add_attribute(header[i], row[i])
     return mushrooms
 
-
 def get_all_values(mushrooms: list[Mushroom]) -> list[str]:
     values = []
     mush = mushrooms[1:]
@@ -104,18 +103,16 @@ def proportion_edible_mushrooms(mushrooms: list[Mushroom]) -> int:
 
 def build_decision_tree(mushrooms: list[Mushroom]) -> Node:
     header = mushrooms[0]
-    mushrooms = mushrooms[1:]
-    value_used = []
+    mush = mushrooms[1:]
     all_value = get_all_values(mushrooms)
-    entr_edib = calculate_entropy(mushrooms)
+    entr_edib = calculate_entropy(mush)
     # print(entr_edib)
-    for attribute in header:
-        for mushroom in mushrooms:
-            if mushrooms.__getattribute(attribute) == value_used[-1] or mushroom.get_attribute(attribute) not in value_used:
-                value_used.append(mushroom.get_attribute(attribute))
-                mushrooms_with_attribute = get_mushrooms_same_attribute(mushrooms, attribute, mushroom.get_attribute(attribute))
-                entr = calculate_entropy(mushrooms_with_attribute)
-
+    for i in range(1, len(header)):
+        for value in all_value[i]:
+            mushroom_same_attribute = get_mushrooms_same_attribute(mush, header[i], value)
+            pav = len(mushroom_same_attribute) / len(mush)
+            entrop_same_mush = calculate_entropy(mushroom_same_attribute)
+            # print(value, " ", mushroom_same_attribute)
     
     
         
