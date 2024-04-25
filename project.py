@@ -63,20 +63,30 @@ def load_dataset(path: str) -> list[Mushroom]:
         for row in reader:
             mushrooms.append(Mushroom(boolean[row[0]]))
             # print(row)
-            for i in range(1, len(row)):
+            for i in range(0, len(row)):
                 mushrooms[-1].add_attribute(header[i], row[i])
     return mushrooms
 
-def calculate_entropy(mushrooms: list[Mushroom]) -> float:
-    edible = 0
-    for mushroom in mushrooms:
-        if mushroom.edible:
-            edible += 1
-    edible /= len(mushrooms)
 
-    if edible == 0 or edible == 1:
+def get_all_values(mushrooms: list[Mushroom]) -> list[str]:
+    values = []
+    mush = mushrooms[1:]
+    for attribute in mushrooms[0]:
+        values.append(get_all_values_from_attribute(mush, attribute))
+    return values
+    
+def get_all_values_from_attribute(mushrooms: list[Mushroom], attribute: str) -> list[str]:
+    values = set()
+    for mushroom in mushrooms:
+        values.add(mushroom.get_attribute(attribute))
+    return values
+
+def calculate_entropy(mushrooms: list[Mushroom]) -> float:
+    prop = proportion_edible_mushrooms(mushrooms)
+
+    if prop == 0 or prop == 1:
         return 0
-    return edible * math.log(((1 - edible) / edible), 2) - math.log(1 - edible, 2)
+    return prop * math.log(((1 - prop) / prop), 2) - math.log(1 - prop, 2)
 
 def get_mushrooms_same_attribute(mushrooms: list[Mushroom], attribute: str, value: str) -> list[Mushroom]:
     mushrooms_with_attribute = []
@@ -85,18 +95,30 @@ def get_mushrooms_same_attribute(mushrooms: list[Mushroom], attribute: str, valu
             mushrooms_with_attribute.append(mushroom)
     return mushrooms_with_attribute
 
+def proportion_edible_mushrooms(mushrooms: list[Mushroom]) -> int:
+    edible = 0
+    for mushroom in mushrooms:
+        if mushroom.edible:
+            edible += 1
+    return edible/len(mushrooms)
+
 def build_decision_tree(mushrooms: list[Mushroom]) -> Node:
     header = mushrooms[0]
     mushrooms = mushrooms[1:]
     value_used = []
-    
+    all_value = get_all_values(mushrooms)
+    entr_edib = calculate_entropy(mushrooms)
+    # print(entr_edib)
     for attribute in header:
         for mushroom in mushrooms:
-            value = mushroom.get_attribute(attribute)
-            if value not in value_used:
-                mushrooms_with_attribute = get_mushrooms_same_attribute(mushrooms, attribute, value)
-                value_used.append(value)
-                print(calculate_entropy(mushrooms_with_attribute))
+            if mushrooms.__getattribute(attribute) == value_used[-1] or mushroom.get_attribute(attribute) not in value_used:
+                value_used.append(mushroom.get_attribute(attribute))
+                mushrooms_with_attribute = get_mushrooms_same_attribute(mushrooms, attribute, mushroom.get_attribute(attribute))
+                entr = calculate_entropy(mushrooms_with_attribute)
+
+    
+    
+        
             
 
 if __name__ == "__main__":
