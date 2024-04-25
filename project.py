@@ -107,12 +107,18 @@ def build_decision_tree(mushrooms: list[Mushroom]) -> Node:
     all_value = get_all_values(mushrooms)
     entr_edib = calculate_entropy(mush)
     # print(entr_edib)
+    info_gain = []
     for i in range(1, len(header)):
+        somme = 0
         for value in all_value[i]:
             mushroom_same_attribute = get_mushrooms_same_attribute(mush, header[i], value)
-            pav = len(mushroom_same_attribute) / len(mush)
-            entrop_same_mush = calculate_entropy(mushroom_same_attribute)
+            prop_with_value = len(mushroom_same_attribute) / len(mush)
+            entr_same_mush = calculate_entropy(mushroom_same_attribute)
+            somme += prop_with_value * entr_same_mush
             # print(value, " ", mushroom_same_attribute)
+        info_gain.append((header[i], entr_edib - somme))
+        
+    info_gain = max(info_gain, key=lambda x: x[1])
     
     
         
