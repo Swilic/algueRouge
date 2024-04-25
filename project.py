@@ -2,22 +2,22 @@ import os
 import csv
 import math
 
-class Tree:
-    def __init__(self, root: 'Node' = None):
-        self.__root = None
-
 
 class Node:
     def __init__(self, criterion: str, is_leaf: bool = False):
         self.__attribut = criterion
         self.__isleaf = is_leaf
         self.edges_ = []  # liste des arcs du noeud
+        self.children = []
         
     def is_leaf(self) -> bool:
         return self.__isleaf
         
     def add_edge(self, label: str, child: 'Node') -> None:
         self.edges_.append(Edge(self, child, label))
+    
+    def add_children(self, child: 'Node') -> None:
+        self.children.append(child)
 
 
 class Edge:
@@ -53,6 +53,11 @@ class Mushroom:
 
 
 def load_dataset(path: str) -> list[Mushroom]:
+    """
+    Chargement du dataset
+    :param path: chemin du fichier csv
+    :return: liste des champignons
+    """
     mushrooms = []
     boolean = {'Yes': True, 'No': False}
 
@@ -67,7 +72,34 @@ def load_dataset(path: str) -> list[Mushroom]:
                 mushrooms[-1].add_attribute(header[i], row[i])
     return mushrooms
 
+def get_info_gain(header: list, mush: list[Mushroom], all_value: list, entr_edib: int) -> float:
+    """
+    Calcul de l'information gain
+    :param header: liste des attributs
+    :param mush: liste des champignons
+    :param all_value: liste des valeurs possibles pour chaque attribut
+    :param entr_edib: entropie des champignons comestibles
+    :return: l'attribut qui maximise l'information gain
+    """
+    info_gain = []
+    for i in range(1, len(header)):
+        somme = 0
+        for value in all_value[i]:
+            mushroom_same_attribute = get_mushrooms_same_attribute(mush, header[i], value)
+            prop_with_value = len(mushroom_same_attribute) / len(mush)
+            entr_same_mush = calculate_entropy(mushroom_same_attribute)
+            somme += prop_with_value * entr_same_mush
+            # print(value, " ", mushroom_same_attribute)
+        info_gain.append((header[i], entr_edib - somme))
+
+    return max(info_gain, key=lambda x: x[1])
+
 def get_all_values(mushrooms: list[Mushroom]) -> list[str]:
+    """
+    Récupération de toutes les valeurs possibles pour chaque attribut
+    :param mushrooms: liste des champignons
+    :return: liste des valeurs possibles pour chaque attribut
+    """
     values = []
     mush = mushrooms[1:]
     for attribute in mushrooms[0]:
@@ -75,6 +107,12 @@ def get_all_values(mushrooms: list[Mushroom]) -> list[str]:
     return values
     
 def get_all_values_from_attribute(mushrooms: list[Mushroom], attribute: str) -> list[str]:
+    """
+    Récupération de toutes les valeurs possibles pour un attribut
+    :param mushrooms: liste des champignons
+    :param attribute: attribut
+    :return: liste des valeurs possibles pour un attribut
+    """
     values = set()
     for mushroom in mushrooms:
         values.add(mushroom.get_attribute(attribute))
@@ -107,22 +145,10 @@ def build_decision_tree(mushrooms: list[Mushroom]) -> Node:
     all_value = get_all_values(mushrooms)
     entr_edib = calculate_entropy(mush)
     # print(entr_edib)
-    info_gain = []
-    for i in range(1, len(header)):
-        somme = 0
-        for value in all_value[i]:
-            mushroom_same_attribute = get_mushrooms_same_attribute(mush, header[i], value)
-            prop_with_value = len(mushroom_same_attribute) / len(mush)
-            entr_same_mush = calculate_entropy(mushroom_same_attribute)
-            somme += prop_with_value * entr_same_mush
-            # print(value, " ", mushroom_same_attribute)
-        info_gain.append((header[i], entr_edib - somme))
-        
-    info_gain = max(info_gain, key=lambda x: x[1])
-    
-    
-        
-            
+    info_gain = get_info_gain(header, mush, all_value, entr_edib)
+    print(info_gain)
+
+       
 
 if __name__ == "__main__":
     mushrooms = load_dataset('/resources/lowmush.csv')
