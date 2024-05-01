@@ -56,10 +56,15 @@ class loadTree:
         self.attribute = attribute
 
 def get_header(path:str) -> list[str]:
+    """
+    Permet d'extraire tous les attributs (sauf edible) d'un fichier csv 
+    :param path: chemin d'accès du fichier à extraire.
+    :return: list avec les attributs.
+    """
     with open(os.getcwd() + '/' + path) as csvfile:
         reader = csv.reader(csvfile, delimiter=',')
         header = next(reader)
-    return header
+    return header[1:]
 
 def load_dataset(path: str) -> list[Mushroom]:
     """
@@ -83,7 +88,6 @@ def load_dataset(path: str) -> list[Mushroom]:
 def get_info_gain(mush: list[Mushroom], all_value: list, entr_edib: int) -> float:
     """
     Calcul de l'information gain.
-    # :param header: liste des attributs.
     :param mush: liste des champignons.
     :param all_value: liste des valeurs possibles pour chaque attribut.
     :param entr_edib: entropie des champignons comestibles.
@@ -91,7 +95,7 @@ def get_info_gain(mush: list[Mushroom], all_value: list, entr_edib: int) -> floa
     """
     info_gain = []
     header = get_header('lowmush.csv')
-    for i in range(1, len(header)):
+    for i in range(len(header)):
         somme = 0
         for value in all_value[i]:
             mushroom_same_attribute = get_mushrooms_same_value(mush, header[i], value)
@@ -167,14 +171,21 @@ def proportion_edible_mushrooms(mushrooms: list[Mushroom]) -> int:
             edible += 1
     return edible/len(mushrooms)
 
+
 def build_decision_tree(mushrooms: list[Mushroom]) -> Node:
     # header = mushrooms[0]
-    mush = mushrooms[1:]
     all_value = get_all_values(mushrooms)
-    entr_edib = calculate_entropy(mush)
+    entr_edib = calculate_entropy(mushrooms)
     # print(entr_edib)
-    info_gain = get_info_gain(mush, all_value, entr_edib)
+    info_gain = get_info_gain(mushrooms, all_value, entr_edib)
     # print(max(info_gain, key=lambda x: x[1]))
+    # info_gain_filtered = [x for x in info_gain if x[1] != 0]
+    # info_gain_filtered.sort(key=lambda x: x[1], reverse=True)
+    i = max(info_gain, key=lambda x: x[1])
+    idx_v = info_gain.index(i)
+    val_info = all_value[idx_v]
+    print(list(zip(all_value, info_gain)))
+
 
        
 
