@@ -51,20 +51,22 @@ class Mushroom:
     def edible(self, b: bool):
         self.__edible = b
 
+class loadTree:
+    def __init__(self, attribute) -> None:
+        self.attribute = attribute
 
 def load_dataset(path: str) -> list[Mushroom]:
     """
-    Chargement du dataset
-    :param path: chemin du fichier csv
-    :return: liste des champignons
+    Chargement du dataset.
+    :param path: chemin du fichier csv.
+    :return: liste des champignons.
     """
     mushrooms = []
     boolean = {'Yes': True, 'No': False}
-
-    with open(os.getcwd() + path) as csvfile:
+    with open(os.getcwd() + '/' + path) as csvfile:
         reader = csv.reader(csvfile, delimiter=',')
         header = next(reader)
-        mushrooms.append(header)
+        
         for row in reader:
             mushrooms.append(Mushroom(boolean[row[0]]))
             # print(row)
@@ -74,31 +76,31 @@ def load_dataset(path: str) -> list[Mushroom]:
 
 def get_info_gain(header: list, mush: list[Mushroom], all_value: list, entr_edib: int) -> float:
     """
-    Calcul de l'information gain
-    :param header: liste des attributs
-    :param mush: liste des champignons
-    :param all_value: liste des valeurs possibles pour chaque attribut
-    :param entr_edib: entropie des champignons comestibles
-    :return: l'attribut qui maximise l'information gain
+    Calcul de l'information gain.
+    :param header: liste des attributs.
+    :param mush: liste des champignons.
+    :param all_value: liste des valeurs possibles pour chaque attribut.
+    :param entr_edib: entropie des champignons comestibles.
+    :return: l'attribut qui maximise l'information gain.
     """
     info_gain = []
     for i in range(1, len(header)):
         somme = 0
         for value in all_value[i]:
-            mushroom_same_attribute = get_mushrooms_same_attribute(mush, header[i], value)
+            mushroom_same_attribute = get_mushrooms_same_value(mush, header[i], value)
             prop_with_value = len(mushroom_same_attribute) / len(mush)
             entr_same_mush = calculate_entropy(mushroom_same_attribute)
             somme += prop_with_value * entr_same_mush
             # print(value, " ", mushroom_same_attribute)
         info_gain.append((header[i], entr_edib - somme))
 
-    return max(info_gain, key=lambda x: x[1])
+    return info_gain
 
 def get_all_values(mushrooms: list[Mushroom]) -> list[str]:
     """
-    Récupération de toutes les valeurs possibles pour chaque attribut
-    :param mushrooms: liste des champignons
-    :return: liste des valeurs possibles pour chaque attribut
+    Récupération de toutes les valeurs possibles pour chaque attribut.
+    :param mushrooms: liste des champignons.
+    :return: liste des valeurs possibles pour chaque attribut.
     """
     values = []
     mush = mushrooms[1:]
@@ -108,10 +110,10 @@ def get_all_values(mushrooms: list[Mushroom]) -> list[str]:
     
 def get_all_values_from_attribute(mushrooms: list[Mushroom], attribute: str) -> list[str]:
     """
-    Récupération de toutes les valeurs possibles pour un attribut
-    :param mushrooms: liste des champignons
-    :param attribute: attribut
-    :return: liste des valeurs possibles pour un attribut
+    Récupération de toutes les valeurs possibles pour un attribut.
+    :param mushrooms: liste des champignons.
+    :param attribute: attribut.
+    :return: liste des valeurs possibles pour un attribut.
     """
     values = set()
     for mushroom in mushrooms:
@@ -119,20 +121,39 @@ def get_all_values_from_attribute(mushrooms: list[Mushroom], attribute: str) -> 
     return values
 
 def calculate_entropy(mushrooms: list[Mushroom]) -> float:
+    """
+    Calcul l'entropy par rapport à une liste de champignon donnée.
+    :param mushrooms: liste avec les champignons qu'il faut calculer.
+    :return: le résultat du calcul (float).
+    """
     prop = proportion_edible_mushrooms(mushrooms)
 
     if prop == 0 or prop == 1:
         return 0
     return prop * math.log(((1 - prop) / prop), 2) - math.log(1 - prop, 2)
 
-def get_mushrooms_same_attribute(mushrooms: list[Mushroom], attribute: str, value: str) -> list[Mushroom]:
-    mushrooms_with_attribute = []
+def get_mushrooms_same_value(mushrooms: list[Mushroom], attribute: str, value: str) -> list[Mushroom]:
+    """
+    Regroupe dans une liste tous les champignons avec la même valeur sur un attribut.
+    :param mushrooms: liste avec les champignons.
+    :param attribute: l'attribut pour laquelle on veut regarder la valeur.
+    :param value: la valeur de l'attribut.
+    :return: liste avec les champignons de même valeur.
+    """
+    mushrooms_with_value = []
     for mushroom in mushrooms:
         if mushroom.get_attribute(attribute) == value:
-            mushrooms_with_attribute.append(mushroom)
-    return mushrooms_with_attribute
+            mushrooms_with_value.append(mushroom)
+    return mushrooms_with_value
 
 def proportion_edible_mushrooms(mushrooms: list[Mushroom]) -> int:
+    """
+    Calcule la proportion de champignons comestibles dans une liste donnée.
+
+    :param mushrooms: Une liste avec les champignons.
+
+    :returns: La proportion de champignons comestibles sous forme décimale.
+    """
     edible = 0
     for mushroom in mushrooms:
         if mushroom.edible:
@@ -146,11 +167,11 @@ def build_decision_tree(mushrooms: list[Mushroom]) -> Node:
     entr_edib = calculate_entropy(mush)
     # print(entr_edib)
     info_gain = get_info_gain(header, mush, all_value, entr_edib)
-    print(info_gain)
+    # print(info_gain)
 
        
 
 if __name__ == "__main__":
-    mushrooms = load_dataset('/resources/lowmush.csv')
+    mushrooms = load_dataset('/mushrooms.csv')
     tree = build_decision_tree(mushrooms)
     print('done')

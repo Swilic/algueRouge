@@ -14,3 +14,5 @@ resources.zip
 
 # Ignore resources directory
 /resources/
+
+*.csv
