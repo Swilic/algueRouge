@@ -55,6 +55,12 @@ class loadTree:
     def __init__(self, attribute) -> None:
         self.attribute = attribute
 
+def get_header(path:str) -> list[str]:
+    with open(os.getcwd() + '/' + path) as csvfile:
+        reader = csv.reader(csvfile, delimiter=',')
+        header = next(reader)
+    return header
+
 def load_dataset(path: str) -> list[Mushroom]:
     """
     Chargement du dataset.
@@ -74,16 +80,17 @@ def load_dataset(path: str) -> list[Mushroom]:
                 mushrooms[-1].add_attribute(header[i], row[i])
     return mushrooms
 
-def get_info_gain(header: list, mush: list[Mushroom], all_value: list, entr_edib: int) -> float:
+def get_info_gain(mush: list[Mushroom], all_value: list, entr_edib: int) -> float:
     """
     Calcul de l'information gain.
-    :param header: liste des attributs.
+    # :param header: liste des attributs.
     :param mush: liste des champignons.
     :param all_value: liste des valeurs possibles pour chaque attribut.
     :param entr_edib: entropie des champignons comestibles.
     :return: l'attribut qui maximise l'information gain.
     """
     info_gain = []
+    header = get_header('lowmush.csv')
     for i in range(1, len(header)):
         somme = 0
         for value in all_value[i]:
@@ -103,9 +110,9 @@ def get_all_values(mushrooms: list[Mushroom]) -> list[str]:
     :return: liste des valeurs possibles pour chaque attribut.
     """
     values = []
-    mush = mushrooms[1:]
-    for attribute in mushrooms[0]:
-        values.append(get_all_values_from_attribute(mush, attribute))
+    header = get_header('lowmush.csv')
+    for attribute in header:
+        values.append(get_all_values_from_attribute(mushrooms, attribute))
     return values
     
 def get_all_values_from_attribute(mushrooms: list[Mushroom], attribute: str) -> list[str]:
@@ -161,17 +168,17 @@ def proportion_edible_mushrooms(mushrooms: list[Mushroom]) -> int:
     return edible/len(mushrooms)
 
 def build_decision_tree(mushrooms: list[Mushroom]) -> Node:
-    header = mushrooms[0]
+    # header = mushrooms[0]
     mush = mushrooms[1:]
     all_value = get_all_values(mushrooms)
     entr_edib = calculate_entropy(mush)
     # print(entr_edib)
-    info_gain = get_info_gain(header, mush, all_value, entr_edib)
-    # print(info_gain)
+    info_gain = get_info_gain(mush, all_value, entr_edib)
+    # print(max(info_gain, key=lambda x: x[1]))
 
        
 
 if __name__ == "__main__":
-    mushrooms = load_dataset('/mushrooms.csv')
+    mushrooms = load_dataset('lowmush.csv')
     tree = build_decision_tree(mushrooms)
     print('done')
