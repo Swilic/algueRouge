@@ -2,22 +2,33 @@ import os
 import csv
 import math
 
+FILENAME = 'mushrooms.csv'
 
 class Node:
     def __init__(self, criterion: str, is_leaf: bool = False):
-        self.__attribut = criterion
+        self.criterion_ = criterion
         self.__isleaf = is_leaf
         self.edges_ = []  # liste des arcs du noeud
-        self.children = []
         
     def is_leaf(self) -> bool:
         return self.__isleaf
         
-    def add_edge(self, label: str, child: 'Node') -> None:
+    def add_edge(self, parent: 'Node', child: 'Node', label: str) -> None:
         self.edges_.append(Edge(self, child, label))
     
     def add_children(self, child: 'Node') -> None:
         self.children.append(child)
+
+    @property
+    def attribut(self):
+        return self.criterion_  
+    
+    def copy(self) -> 'Node':
+        node = Node(self.__attribut, self.__isleaf)
+        for edge in self.edges_:
+            node.add_edge(edge.parent_, edge.child_, edge.label_)
+
+        return node
 
 
 class Edge:
@@ -50,10 +61,6 @@ class Mushroom:
     @edible.setter
     def edible(self, b: bool):
         self.__edible = b
-
-class loadTree:
-    def __init__(self, attribute) -> None:
-        self.attribute = attribute
 
 def get_header(path:str) -> list[str]:
     """
@@ -94,7 +101,7 @@ def get_info_gain(mush: list[Mushroom], all_value: list, entr_edib: int) -> floa
     :return: l'attribut qui maximise l'information gain.
     """
     info_gain = []
-    header = get_header('lowmush.csv')
+    header = get_header(FILENAME)
     for i in range(len(header)):
         somme = 0
         for value in all_value[i]:
@@ -171,25 +178,68 @@ def proportion_edible_mushrooms(mushrooms: list[Mushroom]) -> int:
             edible += 1
     return edible/len(mushrooms)
 
+def link_info_value(info_gain: list[tuple[str, float]], all_value: list[str]) -> list[tuple[str, float]]:
+    """
+    Associe chaque attribut avec son information gain.
+    :param info_gain: liste des informations gain.
+    :param all_value: liste des valeurs possibles pour chaque attribut.
+    :return: liste des attributs avec leur information gain.
+    """
+    linked_info = []
+    for i in range(len(info_gain)):
+        if info_gain[i][1] == 0:
+            continue
+        linked_info.append((all_value[i], info_gain[i]))
+    linked_info.sort(key=lambda x: x[1][1], reverse=True)
+    return linked_info
+
+
+def print_tree(node: Node, depth: int = 0) -> None:
+    """
+    Affiche l'arbre de décision.
+    :param node: noeud de l'arbre.
+    :param depth: profondeur de l'arbre.
+    """
+    if node.is_leaf():
+        print('  ' * depth, node.attribut)
+    else:
+        print('  ' * depth, node.attribut)
+        for edge in node.edges_:
+            print('  ' * (depth + 1), edge.label_)
+            print_tree(edge.child_, depth + 2)
 
 def build_decision_tree(mushrooms: list[Mushroom]) -> Node:
-    # header = mushrooms[0]
-    all_value = get_all_values(mushrooms)
     entr_edib = calculate_entropy(mushrooms)
-    # print(entr_edib)
+    if entr_edib == 0:
+        if mushrooms[0].edible:
+            return Node('Edible', True)
+        else:
+            return Node('No', True)
+
+    all_value = get_all_values(mushrooms)    
+
     info_gain = get_info_gain(mushrooms, all_value, entr_edib)
-    # print(max(info_gain, key=lambda x: x[1]))
-    # info_gain_filtered = [x for x in info_gain if x[1] != 0]
-    # info_gain_filtered.sort(key=lambda x: x[1], reverse=True)
-    i = max(info_gain, key=lambda x: x[1])
-    idx_v = info_gain.index(i)
-    val_info = all_value[idx_v]
-    print(list(zip(all_value, info_gain)))
+    info_gain.sort(key=lambda x: x[1], reverse=True)
+    max_info = info_gain[0][0]
+    node = Node(max_info)
+
+    all_value = get_all_values_from_attribute(mushrooms, max_info)
+    for value in all_value:
+        mushrooms_same_value = get_mushrooms_same_value(mushrooms, max_info, value)
+        if len(mushrooms_same_value) == 0:
+            continue
+        child_node = build_decision_tree(mushrooms_same_value)
+        node.add_edge(node, child_node, value)
+    
+    return node
+
+def is_edible(node: Node, *args) -> bool:
+    ...
 
 
-       
 
 if __name__ == "__main__":
-    mushrooms = load_dataset('lowmush.csv')
+    mushrooms = load_dataset(FILENAME)
     tree = build_decision_tree(mushrooms)
+    print_tree(tree)
     print('done')
