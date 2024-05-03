@@ -6,6 +6,7 @@ class TestMushroomDataLoading(unittest.TestCase):
         self.mushrooms = load_dataset('mushrooms.csv')
 
     def test_load_dataset(self):
+        
         m1 = self.mushrooms[0]
         self.assertFalse(m1.is_edible(), "Le premier champignon devrait être non comestible.")
         self.assertEqual(m1.get_attribute('cap-shape'), 'Convex')

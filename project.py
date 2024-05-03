@@ -22,13 +22,6 @@ class Node:
     @property
     def attribut(self):
         return self.criterion_  
-    
-    def copy(self) -> 'Node':
-        node = Node(self.__attribut, self.__isleaf)
-        for edge in self.edges_:
-            node.add_edge(edge.parent_, edge.child_, edge.label_)
-
-        return node
 
 
 class Edge:
@@ -225,7 +218,6 @@ def build_decision_tree(mushrooms: list[Mushroom]) -> Node:
             return Node('No', True)
 
     all_value = get_all_values(mushrooms)    
-
     info_gain = get_info_gain(mushrooms, all_value, entr_edib)
     info_gain.sort(key=lambda x: x[1], reverse=True)
     max_info = info_gain[0][0]
@@ -256,10 +248,63 @@ def is_edible(node: Node, m: 'Mushroom') -> bool:
             return is_edible(edge.child_, m)
     return False
 
+def tree_to_rule(node: Node) -> str:
+    """
+    Transforme un arbre de décision en règle.
+    :param node: noeud de l'arbre.
+    :return: règle.
+    """
+    if node.is_leaf():
+        if node.attribut == 'Edible':
+            return '  '
+        else:
+            return False
+    champ = [node.attribut]
+    for edge in node.edges_:
+        rec = tree_to_rule(edge.child_)
+        if rec:
+            champ.append(edge.label_)
+            champ.append(tree_to_rule(edge.child_))
+    
+    return champ
+
+def sort_rule(rule: list) -> list:
+    j = len(rule) - 1
+    i = 0
+    while i < j:
+        while isinstance(rule[i], list):
+            rule[i], rule[j] = rule[j], rule[i]
+            sort_rule(rule[i])
+            j -= 1
+        i += 1
+
+    return rule
+
+def clean_rule(rule: list) -> str:
+    att = rule[0]
+    txt = '['
+    for i in range(1, len(rule)):
+        if type(rule[i]) == list:
+            
+            txt = txt[:-1] + 'AND '
+            txt += clean_rule(rule[i])
+        elif rule[i] != '  ':
+            if i != 1:
+                txt += ' OR '
+            if rule[i] != '  ':
+                txt += '( ' +  att + ' = ' + rule[i] + ' )'
+    return txt + ']'
 
 if __name__ == "__main__":
     mushrooms = load_dataset(FILENAME)
     tree = build_decision_tree(mushrooms)
-    print(is_edible(tree, make_mushroom({'odor': 'Almond'})))
+    # print(is_edible(tree, make_mushroom({'odor': 'Almond'})))
+    # ex = tree_to_rule(tree)
+    # exi = clean_rule(ex)
+    # print(exi)
     # display(tree)
+    #tree to rule
+    rules = clean_rule(tree_to_rule(tree))
     print('done')
+
+
