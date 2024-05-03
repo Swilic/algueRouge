@@ -73,6 +73,12 @@ def get_header(path:str) -> list[str]:
         header = next(reader)
     return header[1:]
 
+def make_mushroom(attributes):
+    ret = Mushroom(None)
+    for k, v in attributes.items():
+        ret.add_attribute(k, v)
+    return ret
+
 def load_dataset(path: str) -> list[Mushroom]:
     """
     Chargement du dataset.
@@ -193,20 +199,22 @@ def link_info_value(info_gain: list[tuple[str, float]], all_value: list[str]) ->
     linked_info.sort(key=lambda x: x[1][1], reverse=True)
     return linked_info
 
-
-def print_tree(node: Node, depth: int = 0) -> None:
+def display(node: Node, depth: int = 0) -> None:
     """
     Affiche l'arbre de décision.
     :param node: noeud de l'arbre.
     :param depth: profondeur de l'arbre.
     """
     if node.is_leaf():
-        print('  ' * depth, node.attribut)
+        if node.attribut == 'Edible':
+            print('  ' * depth, 'Edible')
+        else:
+            print('  ' * depth, 'Not edible')
     else:
         print('  ' * depth, node.attribut)
         for edge in node.edges_:
             print('  ' * (depth + 1), edge.label_)
-            print_tree(edge.child_, depth + 2)
+            display(edge.child_, depth + 2)
 
 def build_decision_tree(mushrooms: list[Mushroom]) -> Node:
     entr_edib = calculate_entropy(mushrooms)
@@ -233,13 +241,25 @@ def build_decision_tree(mushrooms: list[Mushroom]) -> Node:
     
     return node
 
-def is_edible(node: Node, *args) -> bool:
-    ...
-
+def is_edible(node: Node, m: 'Mushroom') -> bool:
+    """
+    Permet de déterminer si un champignon est comestible.
+    :param node: noeud de l'arbre.
+    :param m: champignon.
+    :return: True si comestible, False sinon.
+    """
+    if node.is_leaf():
+        return node.attribut == 'Edible'
+    
+    for edge in node.edges_:
+        if m.get_attribute(node.attribut) == edge.label_:
+            return is_edible(edge.child_, m)
+    return False
 
 
 if __name__ == "__main__":
     mushrooms = load_dataset(FILENAME)
     tree = build_decision_tree(mushrooms)
-    print_tree(tree)
+    print(is_edible(tree, make_mushroom({'odor': 'Almond'})))
+    # display(tree)
     print('done')
