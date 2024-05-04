@@ -256,7 +256,7 @@ def is_edible(node: Node, m: 'Mushroom') -> bool:
 
 def tree_to_rule_list(node: Node) -> str:
     """
-    Transforme un arbre de décision en règle.
+    Transforme un arbre en une liste sur laquelle on peut appliquer la fonction decision_to_rule.
     :param node: noeud de l'arbre.
     :return: règle.
     """
@@ -275,7 +275,11 @@ def tree_to_rule_list(node: Node) -> str:
     return champ
 
 def decision_to_rule(rule: list) -> str:
-    
+    """
+    Transforme une liste en une règle.
+    :param rule: liste avec les règles organisée.
+    :return: règle booléenne.
+    """
     att = rule[0]
     txt = '['
     for i in range(1, len(rule)):
@@ -305,7 +309,8 @@ if __name__ == "__main__":
     # print(is_edible(tree, make_mushroom({'odor': 'None', 'spore-print-color': 'Green'})))
     # display(tree)
     # print(rules)
-    print_rule(rules)
+    # print_rule(rules)
+    print(get_all_values(mushrooms))
     print('done')
 
 
