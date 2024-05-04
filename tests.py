@@ -38,6 +38,8 @@ def make_mushroom(attributes):
 class TestBuildTree(unittest.TestCase):
     def setUp(self):
         self.test_tree_root = build_decision_tree(load_dataset('mushrooms.csv'))
+        self.test_rule = decision_to_rule(tree_to_rule_list(self.test_tree_root)) # Récupérer la règle associée à l'arbre
+        self.acceptable = ['odor', 'spore-print-color', 'gill-size', 'habitat', 'cap-color']
 
     def test_tree_main_attribute(self):
         self.assertEqual(self.test_tree_root.criterion_, 'odor', "Le premier critère de division doit être 'odor'")
@@ -62,19 +64,13 @@ class TestBuildTree(unittest.TestCase):
         self.assertLessEqual(depth(self.test_tree_root), 5, "La profondeur de l'arbre doit être inférieure ou égale à 5")
 
     def test_tree_nodes(self): # Vérifier la bonne division des noeuds
-            acceptable = ['odor', 'spore-print-color', 'gill-size', 'habitat', 'cap-color']
             def check_node(node):
                 if node.is_leaf():
                     return
-                self.assertIn(node.criterion_, acceptable, f"Le critère de division {node.criterion_} ne doit pas être utilisé")
+                self.assertIn(node.criterion_, self.acceptable, f"Le critère de division {node.criterion_} ne doit pas être utilisé")
                 for edge in node.edges_:
                     check_node(edge.child_)
 
-class Testbuildrule(unittest.TestCase):
-    def setUp(self):
-        self.test_tree_root = build_decision_tree(load_dataset('mushrooms.csv'))
-        self.test_rule = decision_to_rule(tree_to_rule_list(self.test_tree_root))
-    
     def test_rule_parenthesis(self):
         parenthesis = {'}': '{', ']': '[', ')': '('}
         stack = []
@@ -86,7 +82,9 @@ class Testbuildrule(unittest.TestCase):
         
         self.assertEqual(len(stack), 0, "Les parenthèses ne sont pas bien équilibrées")
 
-
+    def test_rule_values(self):
+        for value in self.acceptable:
+            self.assertIn(value, self.test_rule, f"La règle doit contenir la valeur {value}")
 
 
 
