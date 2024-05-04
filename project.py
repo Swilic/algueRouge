@@ -280,13 +280,13 @@ def decision_to_rule(rule: list) -> str:
     txt = '['
     for i in range(1, len(rule)):
         if type(rule[i]) == list:
-            txt = txt[:-1] + 'AND '
+            txt = txt[:] + ' AND '
             txt += decision_to_rule(rule[i])
         elif rule[i] != '  ':
             if i != 1:
                 txt += ' OR '
             if rule[i] != '  ':
-                txt += f'( {att} = {rule[i]} ) '
+                txt += f'( {att} = {rule[i]} )'
     return txt + ']'
 
 def print_rule(rule: str) -> str:
