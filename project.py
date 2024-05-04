@@ -1,9 +1,10 @@
 import os
 import csv
 import math
+import random
 
 FILENAME = 'mushrooms.csv'
-
+COLORS = ['\033[32m', '\033[33m', '\033[34m', '\033[35m', '\033[36m', '\033[37m', '\033[90m', '\033[91m', '\033[93m', '\033[94m', '\033[95m', '\033[96m', '\033[97m', '\033[0m']
 class Node:
     def __init__(self, criterion: str, is_leaf: bool = False):
         self.criterion_ = criterion
@@ -23,13 +24,11 @@ class Node:
     def attribut(self):
         return self.criterion_  
 
-
 class Edge:
     def __init__(self, parent: Node, child: Node, label: str):
         self.parent_ = parent
         self.child_ = child
         self.label_ = label
-
 
 class Mushroom:
     def __init__(self, edible: bool):
@@ -87,7 +86,7 @@ def load_dataset(path: str) -> list[Mushroom]:
         for row in reader:
             mushrooms.append(Mushroom(boolean[row[0]]))
             # print(row)
-            for i in range(0, len(row)):
+            for i in range(1, len(row)):
                 mushrooms[-1].add_attribute(header[i], row[i])
     return mushrooms
 
@@ -132,9 +131,10 @@ def get_all_values_from_attribute(mushrooms: list[Mushroom], attribute: str) -> 
     :param attribute: attribut.
     :return: liste des valeurs possibles pour un attribut.
     """
-    values = set()
+    values = []
     for mushroom in mushrooms:
-        values.add(mushroom.get_attribute(attribute))
+        if mushroom.get_attribute(attribute) not in values:
+            values.append(mushroom.get_attribute(attribute))
     return values
 
 def calculate_entropy(mushrooms: list[Mushroom]) -> float:
@@ -200,16 +200,22 @@ def display(node: Node, depth: int = 0) -> None:
     """
     if node.is_leaf():
         if node.attribut == 'Edible':
-            print('  ' * depth, 'Edible')
+            print('  ' * depth, '\033[92mEdible\033[0m')
         else:
-            print('  ' * depth, 'Not edible')
+            print('  ' * depth, '\033[91mNot Edible\033[0m')
     else:
-        print('  ' * depth, node.attribut)
+        color = random.choice(COLORS)
+        print('--' * depth, '|', f'{color}{node.attribut}\033[0m')
         for edge in node.edges_:
-            print('  ' * (depth + 1), edge.label_)
+            print('  ' * (depth + 1), f'{color}{edge.label_}\033[0m')
             display(edge.child_, depth + 2)
 
 def build_decision_tree(mushrooms: list[Mushroom]) -> Node:
+    """
+    Créer un arbre de décision.
+    :param mushrooms: liste des champignons.
+    :return: arbre de décision.
+    """
     entr_edib = calculate_entropy(mushrooms)
     if entr_edib == 0:
         if mushrooms[0].edible:
@@ -248,7 +254,7 @@ def is_edible(node: Node, m: 'Mushroom') -> bool:
             return is_edible(edge.child_, m)
     return False
 
-def tree_to_rule(node: Node) -> str:
+def tree_to_rule_list(node: Node) -> str:
     """
     Transforme un arbre de décision en règle.
     :param node: noeud de l'arbre.
@@ -261,50 +267,45 @@ def tree_to_rule(node: Node) -> str:
             return False
     champ = [node.attribut]
     for edge in node.edges_:
-        rec = tree_to_rule(edge.child_)
+        rec = tree_to_rule_list(edge.child_)
         if rec:
             champ.append(edge.label_)
-            champ.append(tree_to_rule(edge.child_))
+            champ.append(tree_to_rule_list(edge.child_))
     
     return champ
 
-def sort_rule(rule: list) -> list:
-    j = len(rule) - 1
-    i = 0
-    while i < j:
-        while isinstance(rule[i], list):
-            rule[i], rule[j] = rule[j], rule[i]
-            sort_rule(rule[i])
-            j -= 1
-        i += 1
-
-    return rule
-
-def clean_rule(rule: list) -> str:
+def decision_to_rule(rule: list) -> str:
+    
     att = rule[0]
     txt = '['
     for i in range(1, len(rule)):
         if type(rule[i]) == list:
-            
             txt = txt[:-1] + 'AND '
-            txt += clean_rule(rule[i])
+            txt += decision_to_rule(rule[i])
         elif rule[i] != '  ':
             if i != 1:
                 txt += ' OR '
             if rule[i] != '  ':
-                txt += '( ' +  att + ' = ' + rule[i] + ' )'
+                txt += f'( {att} = {rule[i]} ) '
     return txt + ']'
+
+def print_rule(rule: str) -> str:
+    """
+    Affiche les décisions
+    :param rule: string avec décision.
+    """
+    rule = rule.replace('AND [', 'AND [\n')
+    print(rule)
+    
 
 if __name__ == "__main__":
     mushrooms = load_dataset(FILENAME)
     tree = build_decision_tree(mushrooms)
-    # print(is_edible(tree, make_mushroom({'odor': 'Almond'})))
-    # ex = tree_to_rule(tree)
-    # exi = clean_rule(ex)
-    # print(exi)
+    rules = decision_to_rule(tree_to_rule_list(tree))
+    # print(is_edible(tree, make_mushroom({'odor': 'None', 'spore-print-color': 'Green'})))
     # display(tree)
-    #tree to rule
-    rules = clean_rule(tree_to_rule(tree))
+    # print(rules)
+    print_rule(rules)
     print('done')
 
 
