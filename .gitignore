@@ -16,3 +16,5 @@ resources.zip
 /resources/
 
 *.csv
+/latexrapport/*
+!/latexrapport/rapport.tex
