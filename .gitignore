@@ -18,3 +18,4 @@ resources.zip
 *.csv
 /latexrapport/*
 !/latexrapport/rapport.tex
+*
