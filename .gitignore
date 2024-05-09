@@ -1,21 +1,3 @@
-# Ignore pychache and pytest cache
-__pycache__/
-.pytest_cache/
 
-# Ignore PDF files
-*.pdf
-
-# Ignore specific Python files
-py.py
-selfTests.py
-
-# Ignore resources.zip file
-resources.zip
-
-# Ignore resources directory
-/resources/
-
-*.csv
-/latexrapport/*
-!/latexrapport/rapport.tex
-*
+./latex/*
+!./latex/rapport.tex
